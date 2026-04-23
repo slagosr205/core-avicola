@@ -48,6 +48,39 @@ class InsumoService:
             )
             return res.scalar_one_or_none()
 
+    async def get_by_nombre_and_tipo(
+        self, nombre: str, tipo: TipoInsumo
+    ) -> Optional[DbInsumo]:
+        async with AsyncSessionLocal() as session:
+            res = await session.execute(
+                select(DbInsumo).where(
+                    DbInsumo.nombre.ilike(f"%{nombre}%"),
+                    DbInsumo.tipo == tipo,
+                )
+            )
+            return res.scalar_one_or_none()
+
+    async def get_or_create_pollito(
+        self, nombre: str, costo_unitario: float
+    ) -> Optional[DbInsumo]:
+        existing = await self.get_by_nombre_and_tipo(nombre, TipoInsumo.POLLITO)
+        if existing:
+            if existing.costo_unitario != costo_unitario:
+                existing.costo_unitario = costo_unitario
+                async with AsyncSessionLocal() as session:
+                    await session.merge(existing)
+                    await session.commit()
+            return existing
+
+        return await self.create(
+            InsumoCreate(
+                nombre=nombre,
+                tipo=TipoInsumo.POLLITO,
+                unidad="UNIDAD",
+                costo_unitario=costo_unitario,
+            )
+        )
+
     async def create(self, data: InsumoCreate) -> DbInsumo:
         async with AsyncSessionLocal() as session:
             tipo_value = data.tipo.upper()

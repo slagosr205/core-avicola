@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { galponesApi, granjasApi, lotesApi, insumosApi } from '@/services/api'
+import { galponesApi, granjasApi, lotesApi } from '@/services/api'
 
 type Granja = { id: string; nombre: string }
 type Galpon = { id: string; numero: string; granja_id?: string | null }
@@ -20,7 +20,7 @@ export default function LoteFormPage() {
     granja_id: '',
     galpon_id: '',
     observaciones: '',
-    pollito_insumo_id: '',
+    pollito_nombre: '',
     costo_unitario_pollito: '',
   })
 
@@ -28,18 +28,12 @@ export default function LoteFormPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [granjas, setGranjas] = useState<Granja[]>([])
   const [galpones, setGalpones] = useState<Galpon[]>([])
-  const [pollitos, setPollitos] = useState<{ id: string; codigo: string; nombre: string; costo_unitario?: number }[]>([])
  
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [granjasRes, pollitosRes] = await Promise.all([
-          granjasApi.list(),
-          insumosApi.list({ tipo: 'POLLITO' }),
-        ])
-        
+        const granjasRes = await granjasApi.list()
         setGranjas(granjasRes.data || [])
-        setPollitos(pollitosRes.data || [])
         
         if (isEdit) {
           const loteRes = await lotesApi.get(id!)
@@ -60,22 +54,25 @@ export default function LoteFormPage() {
             costo_unitario_pollito: '',
           })
         } else {
-        try {
-          const proximo = await lotesApi.proximo()
-          setFormData(prev => ({
-            ...prev,
-            numero_lote: proximo.data?.numero_lote || '',
-          }))
-        } catch {
-          // ignore
+          try {
+            const proximo = await lotesApi.proximo()
+            setFormData(prev => ({
+              ...prev,
+              numero_lote: proximo.data?.numero_lote || '',
+            }))
+          } catch {
+            // ignore
+          }
         }
+      } catch {
+        toast.error('Error al cargar datos')
+      } finally {
+        setLoadingData(false)
       }
-    } catch {
-      toast.error('Error al cargar datos')
-    } finally {
-      setLoadingData(false)
     }
-  }
+
+    loadInitialData()
+  }, [id, isEdit])
 
   useEffect(() => {
     if (isEdit) return
@@ -94,17 +91,6 @@ export default function LoteFormPage() {
     }
     loadGalpones()
   }, [formData.granja_id, isEdit])
-
-  useEffect(() => {
-    if (!formData.pollito_insumo_id) {
-      setFormData(prev => ({ ...prev, costo_unitario_pollito: '' }))
-      return
-    }
-    const pollito = pollitos.find(p => p.id === formData.pollito_insumo_id)
-    if (pollito?.costo_unitario) {
-      setFormData(prev => ({ ...prev, costo_unitario_pollito: pollito.costo_unitario?.toString() || '' }))
-    }
-  }, [formData.pollito_insumo_id, pollitos])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -127,7 +113,7 @@ export default function LoteFormPage() {
           cantidad_inicial: formData.cantidad_inicial,
           peso_promedio_inicial: formData.peso_promedio_inicial,
           fecha_ingreso: formData.fecha_ingreso,
-          pollito_insumo_id: formData.pollito_insumo_id || null,
+          pollito_nombre: formData.pollito_nombre || null,
           costo_unitario_pollito: formData.costo_unitario_pollito ? parseFloat(formData.costo_unitario_pollito) : null,
         })
         toast.success('Lote creado correctamente')
@@ -277,23 +263,18 @@ export default function LoteFormPage() {
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Pollitos</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="label">Insumo Pollito</label>
-                <select
-                  value={formData.pollito_insumo_id}
-                  onChange={(e) => setFormData({ ...formData, pollito_insumo_id: e.target.value })}
+                <label className="label">Nombre del Insumo Pollito</label>
+                <input
+                  type="text"
+                  value={formData.pollito_nombre}
+                  onChange={(e) => setFormData({ ...formData, pollito_nombre: e.target.value })}
                   className="input"
+                  placeholder="Ej: Pollito Ross 308"
                   disabled={isEdit}
-                >
-                  <option value="">Seleccionar pollito</option>
-                  {pollitos.map((p) => (
-                    <option key={p.id} value={p.id}>{p.codigo} - {p.nombre}</option>
-                  ))}
-                </select>
-                {!isEdit && pollitos.length === 0 && (
-                  <p className="text-xs text-amber-600 mt-1">No hay pollitos en inventario. <a href="/inventario/nuevo" className="underline">Crear insumo pollito</a></p>
-                )}
+                />
+                <p className="text-xs text-slate-500 mt-1">Se creará automáticamente si no existe</p>
               </div>
 
               <div>
@@ -308,10 +289,15 @@ export default function LoteFormPage() {
                   placeholder="0.00"
                   disabled={isEdit}
                 />
-                {formData.pollito_insumo_id && (
-                  <p className="text-xs text-slate-500 mt-1">
-                    Total: {formData.cantidad_inicial} x {formData.costo_unitario_pollito || 0} = {((formData.cantidad_inicial || 0) * (parseFloat(formData.costo_unitario_pollito) || 0)).toLocaleString('es-CO')} L
-                  </p>
+              </div>
+
+              <div className="flex items-end">
+                {formData.pollito_nombre && formData.costo_unitario_pollito && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 w-full">
+                    <p className="text-sm text-blue-800">
+                      Total: <strong>{(formData.cantidad_inicial || 0) * (parseFloat(formData.costo_unitario_pollito) || 0)).toLocaleString('es-CO')} L</strong>
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

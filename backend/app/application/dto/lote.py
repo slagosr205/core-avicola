@@ -18,7 +18,7 @@ class LoteBase(BaseModel):
 
 
 class LoteCreate(LoteBase):
-    pollito_insumo_id: Optional[str] = None
+    pollito_nombre: Optional[str] = None
     costo_unitario_pollito: Optional[float] = None
 
 
