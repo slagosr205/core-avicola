@@ -50,7 +50,7 @@ export default function LoteFormPage() {
             granja_id: lote.granja_id || '',
             galpon_id: lote.galpon_id || '',
             observaciones: lote.observaciones || '',
-            pollito_insumo_id: '',
+            pollito_nombre: '',
             costo_unitario_pollito: '',
           })
         } else {
@@ -295,7 +295,7 @@ export default function LoteFormPage() {
                 {formData.pollito_nombre && formData.costo_unitario_pollito && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 w-full">
                     <p className="text-sm text-blue-800">
-                      Total: <strong>{(formData.cantidad_inicial || 0) * (parseFloat(formData.costo_unitario_pollito) || 0)).toLocaleString('es-CO')} L</strong>
+                      Total: <strong>{((formData.cantidad_inicial || 0) * (parseFloat(formData.costo_unitario_pollito) || 0)).toLocaleString('es-CO')} L</strong>
                     </p>
                   </div>
                 )}
