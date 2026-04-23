@@ -123,7 +123,7 @@ export const galponesApi = {
 }
 
 export const insumosApi = {
-  list: (tipo?: string, includeInactive?: boolean) => api.get('/inventario/insumos', { params: { tipo, include_inactive: includeInactive } }),
+  list: (params?: { tipo?: string; include_inactive?: boolean }) => api.get('/inventario/insumos', { params }),
   get: (id: string) => api.get(`/inventario/insumos/${id}`),
   create: (data: Record<string, unknown>) => api.post('/inventario/insumos', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/inventario/insumos/${id}`, data),

@@ -5,6 +5,10 @@ import uuid
 from app.domain.entities.lote import Lote
 from app.domain.value_objects import TipoLote, EstadoLote
 from app.application.dto.lote import LoteCreate, LoteUpdate, LoteResponse
+from app.application.services.inventario_service import (
+    inventario_service,
+)
+from app.application.dto.inventario import InventarioEntradaCreate
 from app.infrastructure.repositories.lote_repository import lote_repository
 
 
@@ -51,6 +55,26 @@ class LoteService:
             created_by=None,
         )
         created = await self.repository.create(nuevo)
+
+        if (
+            data.pollito_insumo_id
+            and data.costo_unitario_pollito
+            and data.costo_unitario_pollito > 0
+        ):
+            try:
+                await inventario_service.entrada(
+                    InventarioEntradaCreate(
+                        insumo_id=data.pollito_insumo_id,
+                        fecha=data.fecha_ingreso,
+                        cantidad=float(data.cantidad_inicial),
+                        costo_unitario=data.costo_unitario_pollito,
+                        numero_factura=f"LOTE-{numero}",
+                        observaciones=f"Entrada de pollitos para {numero}",
+                    )
+                )
+            except Exception:
+                pass
+
         return self._to_response(created)
 
     async def update(self, lote_id: str, data: LoteUpdate) -> Optional[LoteResponse]:
