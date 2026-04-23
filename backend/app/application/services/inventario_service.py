@@ -60,6 +60,7 @@ class InsumoService:
                 TipoInsumo.ALIMENTO: "ALIM",
                 TipoInsumo.MEDICAMENTO: "MED",
                 TipoInsumo.VACUNA: "VAC",
+                TipoInsumo.POLLITO: "POLL",
                 TipoInsumo.MATERIAL: "MAT",
                 TipoInsumo.EQUIPO: "EQ",
                 TipoInsumo.OTRO: "OTR",

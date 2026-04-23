@@ -26,6 +26,7 @@ class TipoInsumo(str, Enum):
     ALIMENTO = "ALIMENTO"
     MEDICAMENTO = "MEDICAMENTO"
     VACUNA = "VACUNA"
+    POLLITO = "POLLITO"
     MATERIAL = "MATERIAL"
     EQUIPO = "EQUIPO"
     OTRO = "OTRO"

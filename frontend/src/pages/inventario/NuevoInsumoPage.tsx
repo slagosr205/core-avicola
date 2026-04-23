@@ -75,6 +75,7 @@ export default function NuevoInsumoPage() {
             <option value="ALIMENTO">Alimento</option>
             <option value="MEDICAMENTO">Medicamento</option>
             <option value="VACUNA">Vacuna</option>
+            <option value="POLLITO">Pollito</option>
             <option value="MATERIAL">Material</option>
             <option value="EQUIPO">Equipo</option>
             <option value="OTRO">Otro</option>
